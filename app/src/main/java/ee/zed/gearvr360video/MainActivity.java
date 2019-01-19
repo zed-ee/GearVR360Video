@@ -5,8 +5,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Surface;
 
-import com.google.android.exoplayer2.ExoPlayer;
-import com.google.android.exoplayer2.ExoPlayerFactory;
+
+import com.google.android.exoplayer.ExoPlayer;
 
 import org.gearvrf.GVRActivity;
 import org.gearvrf.scene_objects.GVRVideoSceneObjectPlayer;
@@ -34,7 +34,7 @@ public class MainActivity extends GVRActivity {
 
             @Override
             public void setSurface(Surface surface) {
-
+                ((SimpleExoPlayer) player).setVideoSurface(surface);
             }
 
             @Override
