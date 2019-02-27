@@ -11,6 +11,7 @@ public class LocationModel {
     public String name;
     public double lat;
     public double lng;
+    public double radius;
     public String video;
     @Builder.Default
     public double distance = -1;

@@ -21,12 +21,23 @@ import org.gearvrf.ISceneObjectEvents;
 import org.gearvrf.scene_objects.GVRCubeSceneObject;
 import org.gearvrf.scene_objects.GVRTextViewSceneObject;
 
+import java.util.LinkedList;
+import java.util.List;
+
+import ee.zed.gearvr360video.focus.OnClickListener;
+import ee.zed.gearvr360video.hud.Button;
+import ee.zed.gearvr360video.model.LocationModel;
+import lombok.val;
+
 class DebugScene extends GVRSceneObject {
     private static final String TAG = "DebugScene";
-
+    private final List<LocationModel> locations;
+    private final List<Button> labels;
     private GVRSceneObject object;
     private GVRSceneObject text;
     private GVRSceneObject mPlayedSide;
+    Button currentLocationText;
+    String welcomeText = "Current location:";
 
     public DebugScene(GVRContext gvrContext, final MainScene mainScene) {
         super(gvrContext);
@@ -36,33 +47,45 @@ class DebugScene extends GVRSceneObject {
         material.setMainTexture(texture);
 
         object = new GVRCubeSceneObject(gvrContext, true, material);
-        object.getTransform().setPosition(0, -2, -3);
+        object.getTransform().setPosition(2, 3, -6);
         addChildObject(object);
+        labels = new LinkedList<>();
+        locations = mainScene.getLocations();
 
-        mPlayedSide = new GVRSceneObject(gvrContext, gvrContext.createQuad(
-                4.0f, 1f), gvrContext.getAssetLoader()
-                .loadTexture(new GVRAndroidResource(gvrContext, R.drawable.dark_gray)));
-        mPlayedSide.getRenderData().setRenderingOrder(
-                GVRRenderData.GVRRenderingOrder.TRANSPARENT + 2);
-        mPlayedSide.getRenderData().setOffset(true);
-        mPlayedSide.getRenderData().setOffsetFactor(-2.0f);
-        mPlayedSide.getRenderData().setOffsetUnits(-2.0f);
-        mPlayedSide.getTransform().setPosition(0f, -0f, -3.1f);
+        for (int i = 0; i<locations.size(); i++) {
+            val location = locations.get(i);
+            Button textViewSceneObject = new Button(gvrContext, 0.8f,0.4f, location.name);
+            if (location.getVideo().equals("-")) {
+                textViewSceneObject.setTextColor(Color.RED);
+            } else {
+                textViewSceneObject.setTextColor(Color.WHITE);
+            }
+            val x = i % 4;
+            val y = i / 4;
+            textViewSceneObject.getTransform().setPosition(x - 1.5f, (y - 0.5f)*0.7f, -3f);
+            textViewSceneObject.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick() {
+                    mainScene.showVideoScene(location.getVideo());
+                }
+            });
+            textViewSceneObject.setTag(location);
+            addChildObject(textViewSceneObject);
+        }
 
-        text = new GVRSceneObject(gvrContext, gvrContext.createQuad(3f,
-                0.3f), createText(gvrContext, "Palun liigu kaardil märgitud asukohta"));
-        text.getTransform().setPosition(0f, -0f, -3f);
-        text.getRenderData().setRenderingOrder(
-                GVRRenderData.GVRRenderingOrder.TRANSPARENT + 2);
+        currentLocationText = new Button(gvrContext, 4f,1.4f,welcomeText);
+        currentLocationText.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick() {
+                mainScene.showDefaultScene();
+            }
+        });
+        currentLocationText.getTransform().setPosition(0f, -3f, -4f);
 
-
-        addChildObject(mPlayedSide);
-
-        addChildObject(text);
+        addChildObject(currentLocationText);
 
 
     }
-
 
     public void onStep(GVRContext mGVRContext) {
         if (object != null) {
@@ -70,24 +93,35 @@ class DebugScene extends GVRSceneObject {
         }
     }
 
-    public static GVRTexture createText(GVRContext gvrContext, String text) {
-        Bitmap bitmap = Bitmap.createBitmap(456, 23, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
+    public void onLocationUpdated(Location currentLocation) {
 
-        Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
-        p.setTextSize(24);
-        p.setTextAlign(Paint.Align.CENTER);
-        p.setColor(Color.RED);
+        String debugMessage = String.format("lat: %1$,.5f, lng:  %2$,.5f, alt: %3$,.2f \nacc v: %4$,.2fm, h: %5$,.2fm, spd: %6$,.2fkmh",
+                currentLocation.getLatitude(), currentLocation.getLongitude(), currentLocation.getAltitude(),
+                currentLocation.getAccuracy(), currentLocation.getVerticalAccuracyMeters(), currentLocation.getSpeed());
+        currentLocationText.setText(welcomeText+"\n\n"+debugMessage);
+        currentLocationText.setTextColor(currentLocation.getAccuracy() < 5 ? Color.GREEN : Color.WHITE);
 
-        int x = (int) (canvas.getWidth() / 2.0f);
-        int y = canvas.getHeight();
+        for(GVRSceneObject sceneObject : getChildren()) {
+            if (sceneObject instanceof Button && sceneObject.getTag() instanceof LocationModel) {
+                LocationModel location = (LocationModel) sceneObject.getTag();
+                double distance = currentLocation.distanceTo(location.getLocation());
+                Button text = (Button) sceneObject;
+                if (location.getVideo().equals("-")) {
+                    if (distance < location.getRadius() * 1.5) {
+                        text.setTextColor(Color.rgb(1f, 0f,1f));
+                    } else {
+                        text.setTextColor(Color.RED);
+                    }
+                } else {
+                    if (distance < location.getRadius() * 1.5) {
+                        text.setTextColor(Color.BLUE);
+                    } else {
+                        text.setTextColor(Color.WHITE);
+                    }
+                }
+                text.setText(location.name + "\n" + String.format("%1$,.2f", distance) + " m");
+            }
+        }
 
-        canvas.drawColor(Color.TRANSPARENT);
-        canvas.drawText(text, x, y, p);
-
-        return new GVRBitmapTexture(gvrContext, bitmap);
-    }
-
-    public void onLocationUpdated(Location location) {
     }
 }

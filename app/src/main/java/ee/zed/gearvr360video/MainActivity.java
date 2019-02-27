@@ -84,7 +84,7 @@ public class MainActivity extends GVRActivity  {
 
     private List<LocationModel> loadData() {
         File path = Environment.getExternalStoragePublicDirectory("tartu1913");
-        File file = new File(path, "test.txt");
+        File file = new File(path, "locations.txt");
         LinkedList<LocationModel> data = new LinkedList<>();
         try {
             CSVReader reader = new CSVReader(new FileReader(file), '\t');
@@ -94,7 +94,8 @@ public class MainActivity extends GVRActivity  {
                         .name(r[0])
                         .lat(Double.parseDouble(r[1]))
                         .lng(Double.parseDouble(r[2]))
-                        .video(r[4]).build();
+                        .radius(Double.parseDouble(r[4]))
+                        .video(r[5]).build();
                 data.add(loc);
             }
         } catch (IOException e) {

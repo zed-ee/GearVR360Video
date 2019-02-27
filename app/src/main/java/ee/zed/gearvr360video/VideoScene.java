@@ -129,21 +129,7 @@ public class VideoScene extends GVRSceneObject {
         File path = Environment.getExternalStoragePublicDirectory(
                 "tartu1913");
 
-        File[] f_ext_files_dirs = mActivity.getExternalMediaDirs();
-
-        File file = new File(f_ext_files_dirs[0], "test.txt");
-
-        try {
-            OutputStream os = new FileOutputStream(file);
-            os.write("test".getBytes());
-            os.close();
-        } catch (IOException e) {
-            // Unable to create file, likely because external storage is
-            // not currently mounted.
-            Log.w("ExternalStorage", "Error writing " + file, e);
-        }
-        //File video = new File(f_ext_files_dirs[0], "videos/6K_265_3HighVRoff.mp4-joined.mp4");
-        File video = new File(path, "VRp1.mp4");
+        File video = new File(path, trackName);
 
         DataSource.Factory dataSourceFactory = new DataSource.Factory() {
             @Override

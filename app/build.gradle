@@ -33,7 +33,7 @@ dependencies {
     implementation 'org.gearvrf:backend_oculus:3.2'
     implementation 'com.google.android.exoplayer:exoplayer:2.6.0'
     implementation 'com.google.android.gms:play-services-location:16.0.0'
-    compile 'com.opencsv:opencsv:3.9'
+    implementation 'com.opencsv:opencsv:3.9'
 
     implementation('io.nlopez.smartlocation:library:3.3.3') {
         transitive = false
