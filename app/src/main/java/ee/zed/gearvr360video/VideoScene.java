@@ -126,6 +126,9 @@ public class VideoScene extends GVRSceneObject {
 
         ExoPlayer player = videoSceneObjectPlayer.getPlayer();
 
+        File path = Environment.getExternalStoragePublicDirectory(
+                "tartu1913");
+
         File[] f_ext_files_dirs = mActivity.getExternalMediaDirs();
 
         File file = new File(f_ext_files_dirs[0], "test.txt");
@@ -140,7 +143,7 @@ public class VideoScene extends GVRSceneObject {
             Log.w("ExternalStorage", "Error writing " + file, e);
         }
         //File video = new File(f_ext_files_dirs[0], "videos/6K_265_3HighVRoff.mp4-joined.mp4");
-        File video = new File(f_ext_files_dirs[0], "videos/video_5970x4352_25s.mp4");
+        File video = new File(path, "VRp1.mp4");
 
         DataSource.Factory dataSourceFactory = new DataSource.Factory() {
             @Override
