@@ -26,6 +26,7 @@ import java.util.List;
 
 import ee.zed.gearvr360video.focus.OnClickListener;
 import ee.zed.gearvr360video.hud.Button;
+import ee.zed.gearvr360video.hud.Panel;
 import ee.zed.gearvr360video.model.LocationModel;
 import lombok.val;
 
@@ -36,7 +37,7 @@ class DebugScene extends GVRSceneObject {
     private GVRSceneObject object;
     private GVRSceneObject text;
     private GVRSceneObject mPlayedSide;
-    Button currentLocationText;
+    Panel currentLocationText;
     String welcomeText = "Current location:";
 
     public DebugScene(GVRContext gvrContext, final MainScene mainScene) {
@@ -72,16 +73,20 @@ class DebugScene extends GVRSceneObject {
             textViewSceneObject.setTag(location);
             addChildObject(textViewSceneObject);
         }
-
-        currentLocationText = new Button(gvrContext, 4f,1.4f,welcomeText);
-        currentLocationText.setOnClickListener(new OnClickListener() {
+        Button back = new Button(gvrContext, 0.8f,0.2f, "Back");
+        back.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick() {
                 mainScene.showDefaultScene();
             }
         });
-        currentLocationText.getTransform().setPosition(0f, -3f, -4f);
+        back.getTransform().setPosition(0f, -2f, -4f);
+        addChildObject(back);
 
+        currentLocationText = new Panel(gvrContext, 4f,1.4f,welcomeText);
+
+        currentLocationText.getTransform().setPosition(0f, -1.5f, -5f);
+        currentLocationText.setBackgroundColor(Color.BLACK);
         addChildObject(currentLocationText);
 
 
@@ -94,10 +99,12 @@ class DebugScene extends GVRSceneObject {
     }
 
     public void onLocationUpdated(Location currentLocation) {
-
-        String debugMessage = String.format("lat: %1$,.5f, lng:  %2$,.5f, alt: %3$,.2f \nacc v: %4$,.2fm, h: %5$,.2fm, spd: %6$,.2fkmh",
+        String debugMessage = String.format("lat: %1$,.5f, lng:  %2$,.5f, alt: %3$,.2f \n" +
+                        "acc v: %4$,.2fm, h: %5$,.2fm\n " +
+                        "bearing %6$,.2f deg, speed: %6$,.2f kmh",
                 currentLocation.getLatitude(), currentLocation.getLongitude(), currentLocation.getAltitude(),
-                currentLocation.getAccuracy(), currentLocation.getVerticalAccuracyMeters(), currentLocation.getSpeed());
+                currentLocation.getAccuracy(), currentLocation.getVerticalAccuracyMeters(),
+                currentLocation.getBearing(), currentLocation.getSpeed());
         currentLocationText.setText(welcomeText+"\n\n"+debugMessage);
         currentLocationText.setTextColor(currentLocation.getAccuracy() < 5 ? Color.GREEN : Color.WHITE);
 

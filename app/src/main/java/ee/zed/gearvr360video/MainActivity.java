@@ -140,6 +140,11 @@ public class MainActivity extends GVRActivity  {
         super.onPause();
         mMain.onPause();
     }
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        mMain.onRestart();
+    }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -148,6 +153,11 @@ public class MainActivity extends GVRActivity  {
         } else {
             return true;
         }
+    }
+
+    @Override
+    public void onUserLeaveHint(){
+        mMain.onRestart();
     }
     private MainScene mMain = null;
     private GestureDetector gestureDetector;

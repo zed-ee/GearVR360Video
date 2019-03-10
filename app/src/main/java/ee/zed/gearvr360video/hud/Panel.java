@@ -10,33 +10,18 @@ import org.gearvrf.scene_objects.GVRTextViewSceneObject;
 import ee.zed.gearvr360video.focus.FocusListener;
 import ee.zed.gearvr360video.focus.FocusableSceneObject;
 
-public class Button extends FocusableSceneObject {
+public class Panel extends FocusableSceneObject {
     GVRTextViewSceneObject textViewSceneObject;
-    public Button(GVRContext gvrContext, Float width, Float height, String text){
+    public Panel(GVRContext gvrContext, Float width, Float height, String text){
         super(gvrContext, width, height);
         textViewSceneObject = new GVRTextViewSceneObject(gvrContext, width, height, text);
         textViewSceneObject.setGravity(Gravity.CENTER);
         textViewSceneObject.setBackgroundColor(Color.LTGRAY);
-        textViewSceneObject.setTextSize(4);
+        textViewSceneObject.setTextSize(5);
         //textViewSceneObject.setTag(location);
-        attachComponent(new GVRSphereCollider(gvrContext));
-        getCollider().setEnable(true);
 
         addChildObject(textViewSceneObject);
 
-        super.setFocusListener(new FocusListener() {
-            @Override
-            public void gainedFocus(FocusableSceneObject object) {
-                textViewSceneObject.setBackgroundColor(Color.BLACK);
-                //textViewSceneObject.setTextColor(Color.YELLOW);
-            }
-
-            @Override
-            public void lostFocus(FocusableSceneObject object) {
-                textViewSceneObject.setBackgroundColor(Color.LTGRAY);
-                //textViewSceneObject.setTextColor(Color.WHITE);
-            }
-        });
 
     }
 

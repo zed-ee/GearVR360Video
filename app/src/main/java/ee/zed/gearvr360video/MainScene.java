@@ -42,6 +42,7 @@ public class MainScene extends GVRMain implements OnLocationUpdatedListener, OnA
 
     private FocusableController mFocusableController = null;
     private GVRPicker mPicker = null;
+    private boolean restart = false;
 
     public MainScene(GVRActivity mainActivity, List<LocationModel> locations) {
         mActivity = mainActivity;
@@ -83,12 +84,16 @@ public class MainScene extends GVRMain implements OnLocationUpdatedListener, OnA
         mMainScene.getMainCameraRig().addChildObject(textViewSceneObject);
         //mMainScene.addSceneObject(textViewSceneObject);
         initialized = true;
-        showDebugScene();
+        showDefaultScene();
 
 
     }
 
     public void onPause() {
+        showDefaultScene();
+    }
+    public void onRestart() {
+        restart = true;
     }
 
     public void showVideoScene(String trackName) {
@@ -159,12 +164,20 @@ public class MainScene extends GVRMain implements OnLocationUpdatedListener, OnA
     public void onLocationUpdated(Location location) {
         if(!initialized) return;
 
-        String debugMessage = String.format("lat: %1$,.5f, lng:  %2$,.5f, alt: %3$,.2f \nacc v: %4$,.2fm, h: %5$,.2fm, spd: %6$,.2fkmh",
+        String debugMessage = String.format("lat: %1$,.5f, lng:  %2$,.5f, alt: %3$,.2f \n" +
+                        "acc v: %4$,.2fm, h: %5$,.2fm\n " +
+                        "bearing %6$,.2f deg, speed: %6$,.2f kmh",
                 location.getLatitude(), location.getLongitude(), location.getAltitude(),
-                location.getAccuracy(), location.getVerticalAccuracyMeters(), location.getSpeed());
-        textViewSceneObject.setText(welcomeText+"\n\n"+debugMessage);
+                location.getAccuracy(), location.getVerticalAccuracyMeters(),
+                location.getBearing(), location.getSpeed());
+        textViewSceneObject.setText(welcomeText);
         textViewSceneObject.setTextColor(location.getAccuracy() < 5 ? Color.GREEN : Color.WHITE);
-
+/*
+        location.setAccuracy(4);
+        location.setLatitude(58.3808087);
+        location.setLongitude(26.7253286);
+        location.setBearing(270);
+        */
         if (location.getAccuracy() < 5) {
             checkLocation(location);
         }
@@ -177,7 +190,10 @@ public class MainScene extends GVRMain implements OnLocationUpdatedListener, OnA
             double distance = currentLocation.distanceTo(location.getLocation());
             if (distance < location.getRadius()) {
                isInArea = true;
-               showVideoScene(location.getVideo());
+               if(activeScene == 0) {
+                   mVideoScene.getTransform().setRotationByAxis(currentLocation.getBearing(), 0, 1,0);
+                   showVideoScene(location.getVideo());
+               }
             }
         }
         if (!isInArea && activeScene == 2){
@@ -188,4 +204,5 @@ public class MainScene extends GVRMain implements OnLocationUpdatedListener, OnA
     public List<LocationModel> getLocations() {
         return locations;
     }
+
 }
