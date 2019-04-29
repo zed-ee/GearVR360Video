@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import ee.zed.gearvr360video.model.LocationModel;
+import ee.zed.gearvr360video.service.SensorService;
 import io.nlopez.smartlocation.SmartLocation;
 import io.nlopez.smartlocation.activity.config.ActivityParams;
 import io.nlopez.smartlocation.location.config.LocationParams;
@@ -12,9 +13,17 @@ import lombok.val;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.RemoteException;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -24,6 +33,11 @@ import android.view.View;
 
 import com.opencsv.CSVReader;
 
+import org.altbeacon.beacon.Beacon;
+import org.altbeacon.beacon.BeaconManager;
+import org.altbeacon.beacon.BeaconParser;
+import org.altbeacon.beacon.RangeNotifier;
+import org.altbeacon.beacon.Region;
 import org.gearvrf.GVRActivity;
 import org.gearvrf.scene_objects.GVRVideoSceneObjectPlayer;
 
@@ -32,10 +46,11 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-public class MainActivity extends GVRActivity  {
+public class MainActivity extends GVRActivity {
 
     // Storage Permissions
     private static final int PERMISSIONSE_REQUEST = 15;
@@ -46,10 +61,16 @@ public class MainActivity extends GVRActivity  {
 
     private LocationGooglePlayServicesProvider provider;
 
+    // device sensor manager
+    private SensorManager mSensorManager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
+
+        // initialize your android device sensor capabilities
+        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
         mMain = new MainScene(this, loadData());
         setMain(mMain, "gvr.xml");
@@ -95,7 +116,9 @@ public class MainActivity extends GVRActivity  {
                         .lat(Double.parseDouble(r[1]))
                         .lng(Double.parseDouble(r[2]))
                         .radius(Double.parseDouble(r[4]))
-                        .video(r[5]).build();
+                        .bt_address(r[5])
+                        //.bt_name(r[6])
+                        .video(r[7]).build();
                 data.add(loc);
             }
         } catch (IOException e) {
@@ -103,6 +126,7 @@ public class MainActivity extends GVRActivity  {
         }
         return data;
     }
+
 
     private void checkPermissions() {
         List<String> required_permissions = new LinkedList<>();
@@ -136,6 +160,12 @@ public class MainActivity extends GVRActivity  {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+
+    @Override
     protected void onPause() {
         super.onPause();
         mMain.onPause();
@@ -163,9 +193,12 @@ public class MainActivity extends GVRActivity  {
     private GestureDetector gestureDetector;
 
 
+
+
     // TRACKING
 
     private void startTracking() {
+
         provider = new LocationGooglePlayServicesProvider();
         provider.setCheckLocationSettings(true);
 

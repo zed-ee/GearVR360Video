@@ -38,16 +38,27 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.time.Duration;
+import java.time.LocalDateTime;
+
+import ee.zed.gearvr360video.focus.OnClickListener;
+import ee.zed.gearvr360video.hud.Button;
+import ee.zed.gearvr360video.hud.Panel;
 
 
 public class VideoScene extends GVRSceneObject {
 
     private GVRVideoSceneObjectPlayer<ExoPlayer> videoSceneObjectPlayer;
     private GVRActivity mActivity;
+    Button textViewSceneObject;
+    LocalDateTime sceneStart = null;
+    MainScene mMainScene;
+    LocalDateTime pauseStart = null;
 
     public VideoScene(GVRContext gvrContext, GVRActivity activity, final MainScene mainScene) {
         super(gvrContext);
         mActivity = activity;
+        mMainScene = mainScene;
 
         videoSceneObjectPlayer = makeExoPlayer();
         
@@ -60,6 +71,19 @@ public class VideoScene extends GVRSceneObject {
         mMovieSceneObject.getTransform().setScale(newRadius,newRadius,newRadius);
 
         addChildObject(mMovieSceneObject);
+
+        textViewSceneObject = new Button(gvrContext, 4f,1.2f, "Palun ära liiguta ennast!");
+        textViewSceneObject.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick() {
+                mainScene.showDefaultScene();
+            }
+        });
+        textViewSceneObject.getTransform().setPosition(0f, -0f, -3.5f);
+        textViewSceneObject.setEnable(false);
+
+        mainScene.mMainScene.getMainCameraRig().addChildObject(textViewSceneObject);
+
 
     }
 
@@ -122,7 +146,9 @@ public class VideoScene extends GVRSceneObject {
         };
     }
 
-    public void init(GVRContext mGVRContext, String trackName) {
+    public void init(GVRContext mGVRContext, String trackName, float rotation) {
+
+        getTransform().setRotationByAxis(rotation, 0, 1,0);
 
         ExoPlayer player = videoSceneObjectPlayer.getPlayer();
 
@@ -151,6 +177,9 @@ public class VideoScene extends GVRSceneObject {
                 new DefaultExtractorsFactory(), null, null);
         player.prepare(mediaSource, true, true);
 
+        textViewSceneObject.setEnable(false);
+        sceneStart = LocalDateTime.now();
+
     }
 
     private void prepareExoPlayerFromFileUri(Uri uri){
@@ -174,6 +203,23 @@ public class VideoScene extends GVRSceneObject {
                 factory, new DefaultExtractorsFactory(), null, null);
 
         player.prepare(audioSource);
+    }
+
+    public void onStep(GVRContext mGVRContext) {
+        if (sceneStart != null && Duration.between(sceneStart, LocalDateTime.now()).getSeconds() > 50)  {
+            mMainScene.exitVideo(true);
+        }
+        if (pauseStart != null && Duration.between(pauseStart, LocalDateTime.now()).getSeconds() > 10)  {
+            textViewSceneObject.setEnable(false);
+            pauseStart = null;
+        }
+    }
+
+    public void pause() {
+        ExoPlayer player = videoSceneObjectPlayer.getPlayer();
+        player.stop();
+        pauseStart = LocalDateTime.now();;
+        textViewSceneObject.setEnable(true);
     }
 }
 

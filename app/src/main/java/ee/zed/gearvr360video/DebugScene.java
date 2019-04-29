@@ -7,6 +7,8 @@ import android.graphics.Paint;
 import android.location.Location;
 import android.view.Gravity;
 
+import org.altbeacon.beacon.Beacon;
+import org.altbeacon.beacon.Region;
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRBitmapTexture;
 import org.gearvrf.GVRCameraRig;
@@ -21,6 +23,7 @@ import org.gearvrf.ISceneObjectEvents;
 import org.gearvrf.scene_objects.GVRCubeSceneObject;
 import org.gearvrf.scene_objects.GVRTextViewSceneObject;
 
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -29,6 +32,8 @@ import ee.zed.gearvr360video.hud.Button;
 import ee.zed.gearvr360video.hud.Panel;
 import ee.zed.gearvr360video.model.LocationModel;
 import lombok.val;
+
+import static java.lang.Math.min;
 
 class DebugScene extends GVRSceneObject {
     private static final String TAG = "DebugScene";
@@ -39,6 +44,7 @@ class DebugScene extends GVRSceneObject {
     private GVRSceneObject mPlayedSide;
     Panel currentLocationText;
     String welcomeText = "Current location:";
+    private LocationModel activeLocation;
 
     public DebugScene(GVRContext gvrContext, final MainScene mainScene) {
         super(gvrContext);
@@ -111,7 +117,9 @@ class DebugScene extends GVRSceneObject {
         for(GVRSceneObject sceneObject : getChildren()) {
             if (sceneObject instanceof Button && sceneObject.getTag() instanceof LocationModel) {
                 LocationModel location = (LocationModel) sceneObject.getTag();
-                double distance = currentLocation.distanceTo(location.getLocation());
+                double geoDistance = currentLocation.distanceTo(location.getLocation());
+                double beaconDistance = location.getBeaconDistance();
+                double distance = min(geoDistance, beaconDistance);
                 Button text = (Button) sceneObject;
                 if (location.getVideo().equals("-")) {
                     if (distance < location.getRadius() * 1.5) {
@@ -121,14 +129,18 @@ class DebugScene extends GVRSceneObject {
                     }
                 } else {
                     if (distance < location.getRadius() * 1.5) {
-                        text.setTextColor(Color.BLUE);
+                        text.setTextColor(activeLocation == location ? Color.GREEN : Color.BLUE );
                     } else {
                         text.setTextColor(Color.WHITE);
                     }
                 }
-                text.setText(location.name + "\n" + String.format("%1$,.2f", distance) + " m");
+                text.setText(location.name + "\ngps:" + String.format("%1$,.2f", geoDistance) + " m"+ "\nbeacon:" + String.format("%1$,.2f", beaconDistance) + " m");
             }
         }
 
+    }
+
+    public void setActiveLocation(LocationModel location) {
+        activeLocation = location;
     }
 }

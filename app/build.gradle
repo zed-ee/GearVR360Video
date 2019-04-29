@@ -34,6 +34,7 @@ dependencies {
     implementation 'com.google.android.exoplayer:exoplayer:2.6.0'
     implementation 'com.google.android.gms:play-services-location:16.0.0'
     implementation 'com.opencsv:opencsv:3.9'
+    implementation 'org.altbeacon:android-beacon-library:2.12.1'
 
     implementation('io.nlopez.smartlocation:library:3.3.3') {
         transitive = false
